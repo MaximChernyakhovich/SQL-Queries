@@ -1,9 +1,11 @@
-DECLARE @startDate DATE = DATEFROMPARTS(YEAR(GETDATE()), 1, 1)
-DECLARE @endDate DATE = GETDATE()
+DECLARE @startDate DATE = DATEFROMPARTS(YEAR(GETDATE()), 1, 1) -- объявление даты начала построения отчёта
+DECLARE @endDate DATE = GETDATE() -- текущая дата
 
+-- объявление временных таблиц
 declare @random_orders TABLE  (id INT IDENTITY(1,1), random_date DATETIME, region nvarchar(100), random_weight FLOAT, random_client INT, randome_price FLOAT)
 declare @random_region Table (id INT IDENTITY(1,1), region nvarchar (100))
 
+-- добавление списка регионов в таблицу random_region
 INSERT INTO @random_region (region)
 VALUES ('Ставропольский край'),
        ('Калининградская область'),
@@ -14,6 +16,7 @@ VALUES ('Ставропольский край'),
        ('Тверская область'),
        ('Томская область')
 
+-- вы полнение цикла для наполнения таблицы random_orders случайными значениями
 DECLARE @i INT = 1
 WHILE @i <= 1000
 BEGIN
@@ -28,6 +31,7 @@ BEGIN
     SET @i = @i + 1
 END
 
+-- агрегация данных
 ;WITH SalesData AS (
     SELECT 
         Region, -- Название региона
@@ -38,17 +42,12 @@ END
         CAST(AVG(randome_price) AS NVARCHAR(100)) AS [4], -- Средняя стоимость заказа
         CAST(COUNT(DISTINCT random_client) as NVARCHAR(100)) AS [5] -- Количество уникальных клиентов
     FROM @random_orders
-    GROUP BY Region, MONTH(random_date) -- Включаем random_date в GROUP BY
+    GROUP BY Region, MONTH(random_date)
 )
-
-
 
 -- Используем PIVOT и UNPIVOT для преобразования данных
      SELECT 
 	CASE WHEN ROW_NUMBER() OVER (PARTITION BY  piv.region ORDER BY (SELECT NULL)) = 1 THEN piv.region ELSE '' END AS region,
-
-        --ID,  
-        -- Описание полей
         CASE
         WHEN ID = '1' THEN '1. Общее количество заказов'
         WHEN ID = '2' THEN '2. Общий вес, кг.'
